@@ -15,7 +15,7 @@ let targetProgress = 0;  // Реальное значение скролла
 // Кадры будут находиться в /assets/frames/frame_001.jpg ... frame_120.jpg
 const getFramePath = (index) => {
   const paddedIndex = String(index).padStart(3, '0');
-  return `/assets/frames/frame_${paddedIndex}.jpg`;
+  return `${import.meta.env.BASE_URL}assets/frames/frame_${paddedIndex}.jpg`;
 };
 
 // Создание элемента загрузки на странице
