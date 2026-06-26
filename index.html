@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ru" class="scroll-smooth bg-space-black text-white">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpaceX Starship // Орбитальные Полеты</title>
+  <meta name="description" content="Ультимативный концепт-лендинг SpaceX Starship. Забронируйте свой орбитальный полет.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <!-- Main Styles -->
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body class="font-sans antialiased overflow-x-hidden selection:bg-space-neon selection:text-space-black">
+
+  <!-- Фиксированный Canvas на весь экран -->
+  <div class="fixed inset-0 w-full h-full z-0 overflow-hidden bg-space-black">
+    <canvas id="scrub-canvas" class="w-full h-full object-cover transition-opacity duration-700 opacity-0"></canvas>
+    <!-- Overlay градиенты для глубины -->
+    <div class="absolute inset-0 bg-gradient-to-t from-space-black via-transparent to-space-black/80 pointer-events-none"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-space-black/60 via-transparent to-space-black/60 pointer-events-none"></div>
+  </div>
+
+  <!-- Верхняя панель (Header) -->
+  <header class="fixed top-0 left-0 w-full z-50 px-6 py-4 md:px-12 md:py-6 flex justify-between items-center backdrop-blur-sm bg-space-black/10 border-b border-white/5">
+    <div class="flex items-center space-x-3">
+      <span class="font-mono text-xs tracking-[0.3em] text-space-neon animate-pulse">● LIVE</span>
+      <h1 class="text-sm md:text-base font-bold tracking-[0.4em] uppercase text-white font-sans">
+        SPACEX <span class="text-space-neon">//</span> STARSHIP
+      </h1>
+    </div>
+    <div class="flex items-center space-x-6">
+      <div class="hidden lg:flex flex-col items-end font-mono text-[10px] text-space-titanium tracking-wider">
+        <span>ОРБИТАЛЬНЫЙ СТАТУС:</span>
+        <span class="text-space-neon font-bold">ГОТОВ К ЗАПУСКУ</span>
+      </div>
+      <a href="#contacts" class="text-xs font-mono border border-space-neon/30 bg-space-neon/5 hover:bg-space-neon hover:text-space-black px-4 py-2 rounded-full transition-all duration-300 tracking-wider">
+        ЗАБРОНИРОВАТЬ
+      </a>
+    </div>
+  </header>
+
+  <!-- Индикатор прогресса скролла -->
+  <div class="fixed top-0 left-0 h-1 bg-gradient-to-r from-space-blue to-space-neon z-50 transition-all duration-100" id="scroll-progress-bar" style="width: 0%"></div>
+
+  <!-- Боковая телеметрия (Виджеты на десктопе) -->
+  <div class="hidden lg:flex fixed left-10 top-1/3 flex-col space-y-8 z-40 font-mono text-[11px] text-space-titanium max-w-[200px]">
+    <div class="border-l-2 border-space-neon/20 pl-4 py-1 hover:border-space-neon transition-all duration-300">
+      <div class="text-[9px] uppercase tracking-widest text-space-titanium/60">ВЫСОТА</div>
+      <div class="text-base font-bold text-white mt-1" id="telemetry-altitude">0 км</div>
+    </div>
+    <div class="border-l-2 border-space-neon/20 pl-4 py-1 hover:border-space-neon transition-all duration-300">
+      <div class="text-[9px] uppercase tracking-widest text-space-titanium/60">СКОРОСТЬ</div>
+      <div class="text-base font-bold text-white mt-1" id="telemetry-velocity">0 км/ч</div>
+    </div>
+    <div class="border-l-2 border-space-neon/20 pl-4 py-1 hover:border-space-neon transition-all duration-300">
+      <div class="text-[9px] uppercase tracking-widest text-space-titanium/60">МАСШТАБ КАДРА</div>
+      <div class="text-base font-bold text-white mt-1" id="telemetry-frame">0 / 120</div>
+    </div>
+  </div>
+
+  <!-- Правый навигатор скролла -->
+  <div class="fixed right-6 md:right-10 top-1/2 -translate-y-1/2 flex flex-col space-y-4 z-40">
+    <div class="nav-dot active" data-target="0"></div>
+    <div class="nav-dot" data-target="1"></div>
+    <div class="nav-dot" data-target="2"></div>
+    <div class="nav-dot" data-target="3"></div>
+    <div class="nav-dot" data-target="4"></div>
+    <div class="nav-dot" data-target="5"></div>
+  </div>
+
+  <!-- Нижний индикатор скролла для первой страницы -->
+  <div class="fixed bottom-8 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center pointer-events-none transition-opacity duration-500" id="scroll-hint">
+    <span class="font-mono text-[9px] tracking-[0.25em] text-space-titanium uppercase animate-bounce mb-2">Листайте вниз</span>
+    <div class="w-[1px] h-10 bg-gradient-to-b from-space-neon to-transparent"></div>
+  </div>
+
+  <!-- Основной контейнер скролла (Секции) -->
+  <main class="relative z-10 w-full">
+    
+    <!-- Секция 1: Главный экран -->
+    <section class="scroll-trigger min-h-[100vh] w-full flex items-center justify-center px-6" id="sec-1">
+      <div class="text-block active max-w-4xl text-center flex flex-col items-center" id="text-block-1">
+        <div class="font-mono text-xs md:text-sm text-space-neon tracking-[0.3em] uppercase mb-4 py-1 px-3 border border-space-neon/20 rounded-full bg-space-neon/5 backdrop-blur-sm">
+          Новая эра освоения космоса
+        </div>
+        <h2 class="text-4xl md:text-6xl lg:text-7xl font-extrabold uppercase tracking-wider mb-6 bg-gradient-to-b from-white to-neutral-400 bg-clip-text text-transparent">
+          Орбитальные Полеты
+        </h2>
+        <p class="text-sm md:text-lg text-space-titanium max-w-2xl leading-relaxed mb-8">
+          Проживите невероятный опыт на высоте 400 километров. Полностью автоматизированная система жизнеобеспечения, панорамные виды на Землю и непревзойденная надежность Starship.
+        </p>
+        <button class="font-mono text-xs tracking-widest border border-white/20 hover:border-space-neon hover:text-space-neon px-8 py-3 bg-white/5 hover:bg-space-neon/5 backdrop-blur-md transition-all duration-300 rounded-lg group" onclick="window.scrollTo({top: window.innerHeight * 1.2, behavior: 'smooth'})">
+          ИССЛЕДОВАТЬ МИССИЮ <span class="inline-block transition-transform group-hover:translate-y-1">↓</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Секция 2: Старт миссии -->
+    <section class="scroll-trigger min-h-[100vh] w-full flex items-center justify-start px-6 md:px-24" id="sec-2">
+      <div class="text-block max-w-xl text-left glass-card p-8 md:p-10 rounded-2xl border border-white/5 bg-space-black/40 backdrop-blur-md" id="text-block-2">
+        <div class="font-mono text-[10px] md:text-xs text-space-neon tracking-widest uppercase mb-2">ЭТАП 01 / ЗАПУСК</div>
+        <h3 class="text-2xl md:text-4xl font-bold uppercase tracking-wide mb-4">Старт на Orbit</h3>
+        <p class="text-xs md:text-sm text-space-titanium leading-relaxed mb-6">
+          Рев 33 двигателей Raptor создает колоссальную тягу в 7600 тонн, отрывая Starship от стартового стола в Бока-Чика. Перегрузки до 3G формируют неповторимое ощущение мощи, выводя корабль на опорную круговую орбиту.
+        </p>
+        <div class="grid grid-cols-2 gap-4 font-mono text-[11px]">
+          <div class="border-t border-white/10 pt-2">
+            <span class="text-space-titanium/70 block">ТЯГА Raptor:</span>
+            <span class="text-white font-bold">75.5 МН</span>
+          </div>
+          <div class="border-t border-white/10 pt-2">
+            <span class="text-space-titanium/70 block">УСКОРЕНИЕ:</span>
+            <span class="text-space-neon font-bold">до 3.2 G</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Секция 3: Орбитальная невесомость -->
+    <section class="scroll-trigger min-h-[100vh] w-full flex items-center justify-end px-6 md:px-24" id="sec-3">
+      <div class="text-block max-w-xl text-left glass-card p-8 md:p-10 rounded-2xl border border-white/5 bg-space-black/40 backdrop-blur-md" id="text-block-3">
+        <div class="font-mono text-[10px] md:text-xs text-space-neon tracking-widest uppercase mb-2">ЭТАП 02 / НЕВЕСОМОСТЬ</div>
+        <h3 class="text-2xl md:text-4xl font-bold uppercase tracking-wide mb-4">Орбитальная Невесомость</h3>
+        <p class="text-xs md:text-sm text-space-titanium leading-relaxed mb-6">
+          Двигатели замолкают. Ремень безопасности ослабевает, и ваше тело плавно отделяется от кресла. Вы парите внутри огромной обитаемой кабины объёмом более 1000 кубических метров с видом на бескрайнюю кривизну родной планеты.
+        </p>
+        <div class="grid grid-cols-2 gap-4 font-mono text-[11px]">
+          <div class="border-t border-white/10 pt-2">
+            <span class="text-space-titanium/70 block">ОБЪЕМ КАБИНЫ:</span>
+            <span class="text-white font-bold">1,000 м³</span>
+          </div>
+          <div class="border-t border-white/10 pt-2">
+            <span class="text-space-titanium/70 block">ВИД НА ЗЕМЛЮ:</span>
+            <span class="text-space-neon font-bold">360° Панорама</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Секция 4: Титановая инженерия -->
+    <section class="scroll-trigger min-h-[100vh] w-full flex items-center justify-start px-6 md:px-24" id="sec-4">
+      <div class="text-block max-w-xl text-left glass-card p-8 md:p-10 rounded-2xl border border-white/5 bg-space-black/40 backdrop-blur-md" id="text-block-4">
+        <div class="font-mono text-[10px] md:text-xs text-space-neon tracking-widest uppercase mb-2">ТЕХНОЛОГИИ / ТЕПЛОЗАЩИТА</div>
+        <h3 class="text-2xl md:text-4xl font-bold uppercase tracking-wide mb-4">Титановая Инженерия</h3>
+        <p class="text-xs md:text-sm text-space-titanium leading-relaxed mb-6">
+          Корпус из высокопрочной нержавеющей стали 304L защищен 18 000 шестиугольных керамических плиток. Эта броня способна выдержать адские температуры до 1400°C при торможении в атмосфере Земли на гиперзвуковой скорости.
+        </p>
+        <div class="grid grid-cols-2 gap-4 font-mono text-[11px]">
+          <div class="border-t border-white/10 pt-2">
+            <span class="text-space-titanium/70 block">МАТЕРИАЛ:</span>
+            <span class="text-white font-bold">Steel 304L</span>
+          </div>
+          <div class="border-t border-white/10 pt-2">
+            <span class="text-space-titanium/70 block">ТЕМПЕРАТУРА:</span>
+            <span class="text-space-neon font-bold">до 1400°C</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Секция 5: Межпланетный транзит -->
+    <section class="scroll-trigger min-h-[100vh] w-full flex items-center justify-end px-6 md:px-24" id="sec-5">
+      <div class="text-block max-w-xl text-left glass-card p-8 md:p-10 rounded-2xl border border-white/5 bg-space-black/40 backdrop-blur-md" id="text-block-5">
+        <div class="font-mono text-[10px] md:text-xs text-space-neon tracking-widest uppercase mb-2">БУДУЩЕЕ / МЕЖПЛАНЕТНЫЙ ПУТЬ</div>
+        <h3 class="text-2xl md:text-4xl font-bold uppercase tracking-wide mb-4">Покорение Марса</h3>
+        <p class="text-xs md:text-sm text-space-titanium leading-relaxed mb-6">
+          Starship — это полностью многоразовая транспортная система, спроектированная для дозаправки на орбите. Это открывает безграничные возможности для транспортировки сотен тонн грузов и людей на Луну, Марс и далее.
+        </p>
+        <div class="grid grid-cols-2 gap-4 font-mono text-[11px]">
+          <div class="border-t border-white/10 pt-2">
+            <span class="text-space-titanium/70 block">ГРУЗОПОДЪЕМНОСТЬ:</span>
+            <span class="text-white font-bold">100-150 тонн</span>
+          </div>
+          <div class="border-t border-white/10 pt-2">
+            <span class="text-space-titanium/70 block">ДОЗАПРАВКА:</span>
+            <span class="text-space-neon font-bold">Автоматическая</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Секция 6: Контакты / Футер -->
+    <section class="scroll-trigger min-h-[100vh] w-full flex items-center justify-center px-6" id="sec-6">
+      <div class="text-block max-w-2xl text-center glass-card p-8 md:p-12 rounded-3xl border border-space-neon/20 bg-space-black/60 backdrop-blur-xl relative overflow-hidden" id="text-block-6">
+        <!-- Свечение на заднем фоне карточки -->
+        <div class="absolute -top-24 -left-24 w-48 h-48 bg-space-blue/20 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-24 -right-24 w-48 h-48 bg-space-neon/10 rounded-full blur-3xl"></div>
+
+        <!-- 1. Главный экран контактов -->
+        <div id="contacts-main-screen" class="transition-all duration-500 ease-in-out">
+          <div class="font-mono text-[10px] md:text-xs text-space-neon tracking-[0.25em] uppercase mb-4">
+            ДЕМОНСТРАЦИОННЫЙ СТЕНД
+          </div>
+          <h3 class="text-3xl md:text-5xl font-black uppercase tracking-wide mb-6">
+            Хотите такой же дорогой сайт?
+          </h3>
+          <p class="text-sm md:text-base text-space-titanium leading-relaxed mb-8 max-w-lg mx-auto font-sans">
+            Этот проект разработан для демонстрации премиального веб-интерактива, плавной покадровой анимации и безупречной мобильной адаптации.
+          </p>
+          
+          <!-- Кнопки действия -->
+          <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <a href="https://t.me/bakan_off" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto font-mono text-xs tracking-widest bg-gradient-to-r from-space-blue to-space-neon text-space-black font-bold px-8 py-4 rounded-xl hover:shadow-[0_0_25px_rgba(0,243,255,0.4)] transition-all duration-300 uppercase text-center">
+              Обсудить проект
+            </a>
+            <button id="btn-show-form" class="w-full sm:w-auto font-mono text-xs tracking-widest border border-white/10 hover:border-space-neon px-8 py-4 rounded-xl hover:bg-space-neon/5 transition-all duration-300 uppercase">
+              Заполнить заявку
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Стеклянная форма заказа -->
+        <div id="contacts-form-screen" class="hidden opacity-0 transition-all duration-500 ease-in-out">
+          <div class="font-mono text-[10px] md:text-xs text-space-neon tracking-[0.25em] uppercase mb-4 text-center">
+            ОРБИТАЛЬНЫЙ ЗАПРОС
+          </div>
+          <h3 class="text-2xl md:text-3xl font-black uppercase tracking-wide mb-6 text-center">
+            Заявка на разработку
+          </h3>
+          
+          <form action="https://api.web3forms.com/submit" method="POST" id="order-form" class="text-left space-y-4 max-w-md mx-auto">
+            <input type="hidden" name="access_key" value="ed7583dd-ce6e-4896-a6f8-48d51212a78a">
+            <input type="hidden" name="subject" value="Новая заявка с SpaceX Лендинга">
+            <input type="hidden" name="from_name" value="SpaceX Landing Portfolio">
+            
+            <div class="flex flex-col space-y-1">
+              <label class="font-mono text-[9px] tracking-widest text-space-neon uppercase">Как вас зовут?</label>
+              <input type="text" name="name" required placeholder="Введите ваше имя" class="bg-space-black/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-space-titanium/30 focus:outline-none focus:border-space-neon focus:ring-1 focus:ring-space-neon transition-all duration-300 font-sans">
+            </div>
+            
+            <div class="flex flex-col space-y-1">
+              <label class="font-mono text-[9px] tracking-widest text-space-neon uppercase">Ваш Telegram или телефон для связи</label>
+              <input type="text" name="contact" required placeholder="@username или +7..." class="bg-space-black/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-space-titanium/30 focus:outline-none focus:border-space-neon focus:ring-1 focus:ring-space-neon transition-all duration-300 font-sans">
+            </div>
+            
+            <div class="flex flex-col space-y-1">
+              <label class="font-mono text-[9px] tracking-widest text-space-neon uppercase">Расскажите о вашем проекте</label>
+              <textarea name="project" required rows="3" placeholder="Опишите ваши пожелания, цели и задачи..." class="bg-space-black/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-space-titanium/30 focus:outline-none focus:border-space-neon focus:ring-1 focus:ring-space-neon transition-all duration-300 font-sans resize-none"></textarea>
+            </div>
+            
+            <div class="flex flex-col space-y-1">
+              <label class="font-mono text-[9px] tracking-widest text-space-neon uppercase">Ориентировочный бюджет (необязательно)</label>
+              <input type="text" name="budget" placeholder="Например: обсуждается, или желаемая сумма" class="bg-space-black/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-space-titanium/30 focus:outline-none focus:border-space-neon focus:ring-1 focus:ring-space-neon transition-all duration-300 font-sans">
+            </div>
+            
+            <div class="pt-2 flex gap-3">
+              <button type="button" id="btn-back-to-main" class="font-mono text-[10px] tracking-widest border border-white/10 hover:border-space-neon px-5 py-3 rounded-xl hover:bg-space-neon/5 transition-all duration-300 uppercase">
+                Назад
+              </button>
+              <button type="submit" id="btn-submit-order" class="flex-1 font-mono text-[10px] tracking-widest bg-gradient-to-r from-space-blue to-space-neon text-space-black font-bold px-6 py-3 rounded-xl hover:shadow-[0_0_25px_rgba(0,243,255,0.4)] transition-all duration-300 uppercase">
+                Отправить на орбиту
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- 3. Экран успешной отправки -->
+        <div id="contacts-success-screen" class="hidden opacity-0 transition-all duration-500 ease-in-out py-8 flex flex-col items-center">
+          <div class="w-16 h-16 border-2 border-space-neon rounded-full flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(0,243,255,0.4)] animate-bounce">
+            <svg class="w-8 h-8 text-space-neon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+            </svg>
+          </div>
+          <h4 class="text-2xl md:text-3xl font-black uppercase text-space-neon tracking-wide mb-4 animate-pulse drop-shadow-[0_0_10px_rgba(0,243,255,0.5)]">
+            Заявка принята!
+          </h4>
+          <p class="text-sm md:text-base text-space-titanium max-w-md leading-relaxed mb-8 font-sans text-center">
+            Андрей свяжется с вами в течение 24 часов.
+          </p>
+          <button id="btn-success-close" class="font-mono text-[10px] tracking-widest border border-white/10 hover:border-space-neon px-6 py-3 rounded-xl hover:bg-space-neon/5 transition-all duration-300 uppercase">
+            Вернуться
+          </button>
+        </div>
+        
+        <!-- Авторство -->
+        <div class="mt-12 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center text-space-titanium/50 font-mono text-[10px] gap-4">
+          <div>
+            РАЗРАБОТЧИК: <span class="text-white font-semibold">Андрей bakan-off</span>
+          </div>
+          <div>
+            © 2026 SPACEX
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
